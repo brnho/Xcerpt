@@ -30,6 +30,7 @@ export default function App() {
         <Stack.Screen name='Excerpts' component={Excerpts} />
         <Stack.Screen name='ExcerptDetail' component={ExcerptDetail} />
         <Stack.Screen name='BookSearch' component={BookSearch} />
+        <Stack.Screen name='NewUI' component={Books2} />
       </Stack.Navigator>
     </NavigationContainer>
   );

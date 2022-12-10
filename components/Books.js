@@ -107,6 +107,9 @@ export default function Books({ navigation }) {
                     size={32}
                     color={Themes.dark.lightText}
                 />
+                <TouchableOpacity onPress={() => { navigation.navigate('NewUI') }}>
+                    <Text style={{color: 'white', fontFamily: 'QuicksandBold'}}>New UI Preview</Text>
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
