@@ -13,6 +13,8 @@ import { Camera, CameraType } from "expo-camera";
 import CropRectangle from "./CropRectangle.js";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import Themes from "../Themes/Themes.js";
+import MlkitOcr from 'react-native-mlkit-ocr';
+import TextRecognition from '@react-native-ml-kit/text-recognition';
 
 const CameraPreview = ({ photo, resetCamera, widthScale, heightScale }) => {
   const getText = async () => {
@@ -23,6 +25,22 @@ const CameraPreview = ({ photo, resetCamera, widthScale, heightScale }) => {
       //const OCR = NativeModules.OCR;
       //const result = await OCR.scanForText(photo.uri);
       //console.log(result);
+
+      const resultFromUri = await MlkitOcr.detectFromUri(photo.uri);
+      resultFromUri.map((block) => {
+        block.lines.map((line) => {
+          console.log(line.text);
+        })
+      })
+      /*
+      const tessOptions = {};
+      const text = await TesseractOcr.recognize(photo.uri, LANG_ENGLISH, tessOptions);
+      console.log(text);
+      */
+      /*
+       const result = await TextRecognition.recognize(photo.uri);
+       console.log(result);
+             */
     } catch (err) {
       console.log('Error:', err);
     }

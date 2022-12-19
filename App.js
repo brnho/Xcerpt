@@ -1,14 +1,8 @@
-import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from '@react-navigation/stack';
-import Books from "./components/Books.js";
-import Books2 from "./components/Books2.js";
-import Excerpts from "./components/Excerpts.js";
+import React, { useState } from "react";
 import { useFonts } from 'expo-font';
-import ExcerptDetail from "./components/ExcerptDetail.js";
-import BookSearch from "./components/BookSearch.js";
-
-const Stack = createStackNavigator();
+import AppStack from "./AppStack.js";
+import Login from "./components/Login.js";
+import { supabase } from "./supabase.js";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -18,21 +12,32 @@ export default function App() {
     LibreBaskervilleBold: require('./assets/Fonts/LibreBaskerville-Bold.ttf'),
     DMSerif: require('./assets/Fonts/DMSerifText-Regular.ttf')
   });
+  const [loggedIn, setLoggedIn] = useState(null);
+
+  // check if the user has an existing session
+  const getSession = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session !== null) {
+        setLoggedIn(true);
+      } else {
+        setLoggedIn(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  React.useEffect(() => {
+    getSession();
+  }, []);
 
   if (!fontsLoaded) {
     return null;
   }
-
+  
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name='Back' component={Books} options={{ headerShown: false }} />
-        <Stack.Screen name='Excerpts' component={Excerpts} />
-        <Stack.Screen name='ExcerptDetail' component={ExcerptDetail} />
-        <Stack.Screen name='BookSearch' component={BookSearch} />
-        <Stack.Screen name='NewUI' component={Books2} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    loggedIn ? <AppStack /> : <Login />
   );
 }
 

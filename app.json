@@ -22,7 +22,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera."
       },
-      "bundleIdentifier": "IOS.Name"
+      "bundleIdentifier": "com.Xcerpt.app.ios"
     },
     "android": {
       "adaptiveIcon": {
