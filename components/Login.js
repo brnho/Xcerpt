@@ -4,18 +4,30 @@ import { supabase } from "../supabase";
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from "expo-linear-gradient";
 import qs from 'qs';
+import UserContext from '../UserContext';
 
-const RETURN_URI = 'exp://10.0.0.16:19000';
+const RETURN_URI = 'exp+finalproject2://expo-development-client/?url=http%3A%2F%2F10.0.0.16%3A8081';
+
 const BLUE3 = "hsl(180, 61%, 87%)";
 
 export default Login = () => {
+    const { setLoggedIn } = useContext(UserContext);
+
     const signInWithGoogle = async () => {
         try {
-            let test = await WebBrowser.openBrowserAsync('http://google.com');
             const { data } = await supabase.auth.signInWithOAuth({ provider: 'google' });
             let result = await WebBrowser.openAuthSessionAsync(data.url);
-            const params = qs.parse(result.url.replace(`${RETURN_URI}#`, ''));
-            const { data: sessionData } = await supabase.auth.refreshSession({ refresh_token: params['refresh_token'] })
+            if (result?.type == 'success') {
+                const params = qs.parse(result.url.replace(`${RETURN_URI}#`, ''));
+                // store session in supabase local storage (is persistent)
+                const { data: sessionData } = await supabase.auth.refreshSession({ refresh_token: params['refresh_token'] })
+                if (sessionData.session !== null) {
+                    // trigger refresh, app will then display <AppStack />
+                    setLoggedIn(true);
+                } else {
+                    throw new Error('Failed to retrieve session')
+                }
+            }
         } catch (err) {
             console.error(err);
         }

@@ -5,6 +5,7 @@ import {
     SafeAreaView,
     FlatList,
     Image,
+    TouchableOpacity
 } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,13 +14,14 @@ import sampleData from "../Sample";
 import { Themes } from "../Themes";
 import BooksHeader from "./BooksHeader";
 import BooksFooter from "./BooksFooter";
+import BookData from "../utils/BookData";
 
 const GREY1 = "hsl(0, 0%, 60%)";
 const BLUE3 = "hsl(180, 61%, 87%)";
 
-const Book = ({ item }) => {
+const Book = ({ item, navigation }) => {
     return (
-        <View style={styles.bookContainer}>
+        <TouchableOpacity style={styles.bookContainer} activeOpacity={0.4}>
             <LinearGradient
                 start={{ x: 0, y: 0.75 }}
                 end={{ x: 1, y: 0.25 }}
@@ -39,17 +41,26 @@ const Book = ({ item }) => {
                         </Text>
                     </View>
                 </View>
-                <MaterialIcons
-                    name="arrow-forward-ios"
-                    size={18}
-                    color={GREY1}
-                />
+                <TouchableOpacity onPress={() => {
+                    navigation.navigate("Excerpts2", {
+                        key: BookData[0].key,
+                        title: BookData[0].title,
+                        author: BookData[0].author,
+                        excerpts: BookData[0].excerpts,
+                    });
+                }}>
+                    <MaterialIcons
+                        name="arrow-forward-ios"
+                        size={18}
+                        color={GREY1}
+                    />
+                </TouchableOpacity>
             </LinearGradient>
-        </View>
+        </TouchableOpacity>
     );
 };
 
-const Books2 = () => {
+const Books2 = ({ navigation }) => {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: BLUE3 }}>
             <LinearGradient
@@ -61,11 +72,11 @@ const Books2 = () => {
                     ListHeaderComponent={BooksHeader}
                     style={{ overflow: "visible" }}
                     data={sampleData}
-                    renderItem={({ item }) => <Book item={item} />}
+                    renderItem={({ item }) => <Book item={item} navigation={navigation} />}
                     keyExtractor={(_, index) => index}
                 />
             </View>
-            <BooksFooter />
+            <BooksFooter navigation={navigation} />
         </SafeAreaView>
     );
 };
@@ -73,7 +84,7 @@ const Books2 = () => {
 export default Books2;
 
 const styles = StyleSheet.create({
-    // padding cannot be set on a SafeAreaView, hence the need for an inner View container
+    // padding cannot be set on a SafeAreaView, hence the need for an inner View
     container: {
         flex: 1,
         paddingTop: 20,

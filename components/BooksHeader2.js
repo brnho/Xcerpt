@@ -10,40 +10,50 @@ const GREY3 = "hsl(0, 0%, 40%)";
 const BLUE1 = "hsl(180, 61%, 90%)";
 const BLUE2 = "hsl(180, 61%, 85%)";
 
-export default BooksHeader = ({ getBooks }) => {
-    const [modalVisible, setModalVisible] = useState(false);
+export default BooksHeader2 = () => {
     return (
         <>
-            <View style={styles.header}>
-            <Entypo name="plus" size={32} color={GREY1} style={{opacity: 0}} />
-                <Text style={styles.headerText}>Books</Text>
-                <TouchableOpacity itSlop={30} onPress={() => { setModalVisible(!modalVisible) }}>
-                    <Entypo name="plus" size={32} color={GREY1} />
-                </TouchableOpacity>
+   
+
+            <View style={styles.searchBarContainer}>
+                <InsetShadow
+                    shadowColor="black"
+                    shadowRadius={6}
+                    shadowOpacity={0.3}
+                    right={false}
+                    bottom={false}
+                    containerStyle={{ borderRadius: 10 }}
+                >
+                    <View style={styles.searchBarContainer2}>
+                        <Entypo name="magnifying-glass" size={24} color={GREY1} />
+                        <TextInput placeholder="Search Books" />
+                    </View>
+                </InsetShadow>
+            </View>
+            <View style={styles.infoContainer}>
+                <View style={styles.numBooksWrapper}>
+                    <Text style={styles.numBooksText}>7 Books</Text>
+                    <FontAwesome name="book" size={18} color={GREY1} />
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text style={styles.sortText}>Sort</Text>
+                    <FontAwesome5 name="sort" size={18} color={GREY2} />
+                </View>
             </View>
 
 
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-            >
-                <BookSearch getBooks={getBooks} modalVisible={modalVisible} setModalVisible={setModalVisible} />
-            </Modal>
+   
         </>
     );
 };
 
 const styles = StyleSheet.create({
     header: {
-        marginTop: 45,
         width: "100%",
         paddingHorizontal: 20,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingBottom: 10,
     },
     headerText: {
         color: "black",
@@ -54,7 +64,7 @@ const styles = StyleSheet.create({
     searchBarContainer: {
         marginHorizontal: 20,
         height: 40,
-        marginVertical: 15,
+        marginBottom: 15,
         borderRadius: 10,
         backgroundColor: BLUE1,
         fontFamily: "Quicksand",

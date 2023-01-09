@@ -1,8 +1,12 @@
 import React, { useState } from "react";
+import { ActivityIndicator } from "react-native";
 import { useFonts } from 'expo-font';
 import AppStack from "./AppStack.js";
 import Login from "./components/Login.js";
 import { supabase } from "./supabase.js";
+import UserContext from "./UserContext.js";
+import { HoldMenuProvider } from "react-native-hold-menu";
+
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -13,6 +17,7 @@ export default function App() {
     DMSerif: require('./assets/Fonts/DMSerifText-Regular.ttf')
   });
   const [loggedIn, setLoggedIn] = useState(null);
+  const [email, setEmail] = useState(null);
 
   // check if the user has an existing session
   const getSession = async () => {
@@ -20,6 +25,7 @@ export default function App() {
       const { data } = await supabase.auth.getSession();
       if (data.session !== null) {
         setLoggedIn(true);
+        setEmail(data.session.user.email)
       } else {
         setLoggedIn(false);
       }
@@ -35,9 +41,15 @@ export default function App() {
   if (!fontsLoaded) {
     return null;
   }
+
+  if (loggedIn == null) {
+    return <ActivityIndicator size='large' />;
+  }
   
   return (
-    loggedIn ? <AppStack /> : <Login />
+    <UserContext.Provider value={{ setLoggedIn, email }}>
+      {loggedIn ? <HoldMenuProvider theme="light"><AppStack /></HoldMenuProvider>: <Login />}
+    </UserContext.Provider>
   );
 }
 

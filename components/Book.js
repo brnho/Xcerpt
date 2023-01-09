@@ -1,115 +1,127 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { StyleSheet, Text, View, Image } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Themes } from "../Themes";
-import InsetShadow from "react-native-inset-shadow";
+import BookData from "../utils/BookData";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
-export default function Book({ item, navigation }) {
-    const { title, author, color, numExcerpts, key, excerpts } = item;
+const GREY1 = "hsl(0, 0%, 60%)";
+
+const Book = ({ item, navigation }) => {
     return (
-        <Pressable
-            style={styles.book}
-            onPress={() => {
-                navigation.navigate("Excerpts", {
-                    key: key,
-                    title: title,
-                    author: author,
-                    excerpts: excerpts,
-                });
-            }}
-        >
-            <View style={styles.book2}>
-                <Text
-                    style={[styles.title, { color: Themes.dark.pastelColors[color] }]}
-                    numberOfLines={2}
-                >
-                    {title}
-                </Text>
-                <Text style={styles.author} numberOfLines={1}>
-                    {author}
-                </Text>
-                <View style={styles.excerptsContainer}>
-                    <InsetShadow
-                        shadowColor="black"
-                        shadowRadius={4}
-                        shadowOpacity={0.7}
-                        right={false}
-                        bottom={false}
-                    >
-                        <InsetShadow
-                            left={false}
-                            top={false}
-                            shadowColor="white"
-                            shadowOpacity={0.15}
-                        >
-                            <View style={styles.excerptsContainer2}>
-                                <Text style={styles.excerptsText}># Excerpts:</Text>
-                                <Text style={styles.excerptsNumber}>{numExcerpts}</Text>
-                            </View>
-                        </InsetShadow>
-                    </InsetShadow>
+        <View style={styles.bookContainer}>
+            <LinearGradient
+                start={{ x: 0, y: 0.75 }}
+                end={{ x: 1, y: 0.25 }}
+                colors={["hsl(180, 61%, 98%)", "hsl(180, 61%, 92%)"]}
+                style={styles.bookContainerGradient}
+            >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <View style={styles.imageContainer}>
+                        <Image style={styles.bookImage} source={{ uri: item?.image }} />
+                    </View>
+                    <View style={styles.bookInfo}>
+                        <Text style={styles.title} numberOfLines={2}>
+                            {item?.title}
+                        </Text>
+                        <Text style={styles.author} numberOfLines={1}>
+                            {item?.author}
+                        </Text>
+                    </View>
                 </View>
-            </View>
-        </Pressable>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate("Excerpts2", {
+                            key: BookData[0].key,
+                            title: BookData[0].title,
+                            author: BookData[0].author,
+                            excerpts: BookData[0].excerpts,
+                        });
+                    }}
+                >
+                    <MaterialIcons name="arrow-forward-ios" size={18} color={GREY1} />
+                </TouchableOpacity>
+            </LinearGradient>
+        </View>
     );
 };
 
-const styles = StyleSheet.create({
-    book: {
-        height: 200,
-        width: "42%",
-        margin: "3%",
-        borderRadius: 10,
+export default Book;
 
-        shadowColor: Themes.dark.shadow.shadowColor.dark,
-        shadowRadius: Themes.dark.shadow.shadowRadius,
+const styles = StyleSheet.create({
+    bookContainer: {
+        height: 90,
+        borderRadius: 15,
+        //paddingHorizontal: 20,
+        //marginBottom: 10,
+        shadowColor: "black",
+        shadowRadius: 4,
         shadowOffset: Themes.dark.shadow.shadowOffset.dark,
-        shadowOpacity: Themes.dark.shadow.shadowOpacity.dark,
+        shadowOpacity: 0.06,
     },
-    book2: {
+    bookContainerNoShadow: {
+        height: 90,
+        borderRadius: 15,
+        //paddingHorizontal: 20,
+        //marginBottom: 10,
+    },
+    bookContainerGradient: {
         height: "100%",
-        width: "100%",
-        backgroundColor: Themes.dark.bgSecondary,
-        borderRadius: 10,
+        borderRadius: 15,
+        paddingHorizontal: 15,
+        padding: 10,
+        flexDirection: "row",
         alignItems: "center",
-        padding: 8,
-        shadowColor: Themes.dark.shadow.shadowColor.light,
-        shadowRadius: Themes.dark.shadow.shadowRadius,
-        shadowOffset: Themes.dark.shadow.shadowOffset.light,
-        shadowOpacity: Themes.dark.shadow.shadowOpacity.light,
+        justifyContent: "space-around",
+    },
+    imageContainer: {
+        width: "14%",
+        height: "100%",
+        shadowColor: "black",
+        shadowRadius: 2,
+        shadowOffset: Themes.dark.shadow.shadowOffset.dark,
+        shadowOpacity: 0.15,
+    },
+    bookImage: {
+        width: "100%",
+        height: "100%",
+        resizeMode: "cover",
+    },
+    bookInfo: {
+        paddingHorizontal: 10,
+        width: "86%",
     },
     title: {
-        textAlign: "center",
-        fontFamily: "Quicksand",
-        fontSize: 18,
-        marginTop: "25%",
-        marginBottom: 7,
+        fontFamily: "DMSerif",
+        fontSize: 16,
+        marginBottom: 5,
     },
     author: {
         fontFamily: "Quicksand",
-        fontSize: 12,
-        color: Themes.dark.lightText,
+        color: Themes.dark.lightTextSecondary,
+        fontSize: 13,
     },
-    excerptsContainer: {
-        position: "absolute",
-        bottom: "10%",
+    // PopupMenu Styles
+    menu: {
+        width: "48%",
+        backgroundColor: "hsl(0, 0%, 97%)",
+        borderRadius: 10,
+        justifyContent: "space-between",
     },
-    excerptsContainer2: {
+    menuItem: {
         flexDirection: "row",
-        fontFamily: "Quicksand",
-        width: "100%",
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        justifyContent: "center",
+        justifyContent: "space-between",
+        alignItems: "center",
+        //marginHorizontal: 10,
+        padding: 10,
+        height: 40,
     },
-    excerptsText: {
-        fontFamily: "Quicksand",
-        color: Themes.dark.lightText,
-        fontSize: 12,
-        marginRight: 5,
+    menuText: {
+        //fontWeight: 'bold'
+        fontSize: 15,
     },
-    excerptsNumber: {
-        fontFamily: "QuicksandBold",
-        color: Themes.dark.lightText,
-        fontSize: 12,
-        textAlign: "center",
+    divider: {
+        height: 1,
+        backgroundColor: "hsl(0, 0%, 90%)",
     },
 });

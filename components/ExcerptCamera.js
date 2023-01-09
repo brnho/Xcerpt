@@ -14,7 +14,6 @@ import CropRectangle from "./CropRectangle.js";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import Themes from "../Themes/Themes.js";
 import MlkitOcr from 'react-native-mlkit-ocr';
-import TextRecognition from '@react-native-ml-kit/text-recognition';
 
 const CameraPreview = ({ photo, resetCamera, widthScale, heightScale }) => {
   const getText = async () => {
