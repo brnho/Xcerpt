@@ -15,3 +15,5 @@ Xcerpt is an app that allows users to store book excerpts via OCR and view the e
 
 ## Video Demo
 https://youtube.com/shorts/59w6iuDGVDI
+
+*Coming soon on the App Store*
