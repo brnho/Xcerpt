@@ -4,17 +4,24 @@ import {
   TouchableOpacity,
   Animated,
   PanResponder,
+  View,
+  Dimensions
 } from "react-native";
+import { AntDesign } from '@expo/vector-icons'; 
 
-const BOX_WIDTH = 100;
-const BOX_HEIGHT = 100;
-const BOX_LEFT = 100;
-const BOX_BOTTOM = 500;
-const CORNER_LEN = 20;
+const WINDOW_HEIGHT = Dimensions.get('window').height;
+const WINDOW_WIDTH = Dimensions.get('window').width;
+
+const BOX_WIDTH = 300;
+const BOX_HEIGHT = 200;
+const BOX_LEFT = (WINDOW_WIDTH - BOX_WIDTH) / 2;
+const BOX_BOTTOM = (WINDOW_HEIGHT - BOX_HEIGHT) / 2;
+const CORNER_HITBOX = 50;
 const MIN_BOX_WIDTH = 30;
 const MIN_BOX_HEIGHT = 30;
+const BORDER_RADIUS = 2;
 
-export default function CropRectangle({ isCameraReady, takePicture }) {
+export default function CropRectangle({ isCameraReady, takePicture, setShowInfoBox }) {
   // animatable styles for the main box and its four courner boxes
   const boxAnim = useRef({
     left: new Animated.Value(BOX_LEFT),
@@ -30,39 +37,39 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
   }).current;
 
   const topRightAnim = useRef({
-    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_HITBOX / 2 - BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_HITBOX / 2 - BORDER_RADIUS / 2),
   }).current;
   const frozenTopRightAnim = useRef({
-    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_HITBOX / 2 - BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_HITBOX / 2 - BORDER_RADIUS / 2),
   }).current;
 
   const topLeftAnim = useRef({
-    left: new Animated.Value(BOX_LEFT - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT - CORNER_HITBOX / 2 + BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_HITBOX / 2 - BORDER_RADIUS / 2),
   }).current;
   const frozenTopLeftAnim = useRef({
-    left: new Animated.Value(BOX_LEFT - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT - CORNER_HITBOX / 2 + BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM + BOX_HEIGHT - CORNER_HITBOX / 2 - BORDER_RADIUS / 2),
   }).current;
 
   const bottomLeftAnim = useRef({
-    left: new Animated.Value(BOX_LEFT - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT - CORNER_HITBOX / 2  + BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM - CORNER_HITBOX / 2  + BORDER_RADIUS / 2),
   }).current;
   const frozenBottomLeftAnim = useRef({
-    left: new Animated.Value(BOX_LEFT - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT - CORNER_HITBOX / 2  + BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM - CORNER_HITBOX / 2  + BORDER_RADIUS / 2),
   }).current;
 
   const bottomRightAnim = useRef({
-    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_HITBOX / 2  - BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM - CORNER_HITBOX / 2  + BORDER_RADIUS / 2),
   }).current;
   const frozenBottomRightAnim = useRef({
-    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_LEN / 2),
-    bottom: new Animated.Value(BOX_BOTTOM - CORNER_LEN / 2),
+    left: new Animated.Value(BOX_LEFT + BOX_WIDTH - CORNER_HITBOX / 2  - BORDER_RADIUS / 2),
+    bottom: new Animated.Value(BOX_BOTTOM - CORNER_HITBOX / 2  + BORDER_RADIUS / 2),
   }).current;
 
   // pan responder for the top right corner box
@@ -73,6 +80,7 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
       onMoveShouldSetPanResponder: () => true,
       // use frozen animations here to remember original box positions
       onPanResponderMove: (_, gestureState) => {
+        setShowInfoBox(false);
         // minimum dx before hitting MIN_BOX_WIDTH
         const threshX = MIN_BOX_WIDTH - frozenBoxAnim.width._value;
         if (gestureState.dx > threshX) {
@@ -116,6 +124,7 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gestureState) => {
+        setShowInfoBox(false);
         const threshX = frozenBoxAnim.width._value - MIN_BOX_WIDTH;
         if (gestureState.dx < threshX) {
           boxAnim.width.setValue(frozenBoxAnim.width._value - gestureState.dx);
@@ -159,6 +168,7 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gestureState) => {
+        setShowInfoBox(false);
         const threshX = frozenBoxAnim.width._value - MIN_BOX_WIDTH;
         if (gestureState.dx < threshX) {
           boxAnim.width.setValue(frozenBoxAnim.width._value - gestureState.dx);
@@ -205,6 +215,7 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gestureState) => {
+        setShowInfoBox(false);
         const threshX = MIN_BOX_WIDTH - frozenBoxAnim.width._value;
         if (gestureState.dx > threshX) {
           boxAnim.width.setValue(frozenBoxAnim.width._value + gestureState.dx);
@@ -249,6 +260,7 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gestureState) => {
+        setShowInfoBox(false);
         // x directions
         boxAnim.left.setValue(frozenBoxAnim.left._value + gestureState.dx);
         topRightAnim.left.setValue(
@@ -300,22 +312,29 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
         {...boxPanResponder.panHandlers}
       />
       <Animated.View
-        style={[styles.cornerBox, topRightAnim]}
+        style={[styles.cornerHitBox, topRightAnim]}
         {...topRightPanResponder.panHandlers}
-      />
+      >
+        <View style={styles.cornerBox}></View>
+      </Animated.View>
       <Animated.View
-        style={[styles.cornerBox, topLeftAnim]}
+        style={[styles.cornerHitBox, topLeftAnim]}
         {...topLeftPanResponder.panHandlers}
-      />
+      >
+        <View style={styles.cornerBox}></View>
+      </Animated.View>
       <Animated.View
-        style={[styles.cornerBox, bottomLeftAnim]}
+        style={[styles.cornerHitBox, bottomLeftAnim]}
         {...bottomLeftPanResponder.panHandlers}
-      />
+      >
+        <View style={styles.cornerBox}></View>
+      </Animated.View>
       <Animated.View
-        style={[styles.cornerBox, bottomRightAnim]}
+        style={[styles.cornerHitBox, bottomRightAnim]}
         {...bottomRightPanResponder.panHandlers}
-      />
-      <TouchableOpacity style={styles.takePhotoButton}></TouchableOpacity>
+      >
+        <View style={styles.cornerBox}></View>
+      </Animated.View>
 
       {isCameraReady ? (
         <TouchableOpacity
@@ -328,12 +347,12 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
               boxAnim.width._value
             );
           }}
-        ></TouchableOpacity>
+        ><AntDesign name="scan1" size={40} color="hsl(0, 0%, 40%)" /></TouchableOpacity>
       ) : (
         <TouchableOpacity
           style={[styles.takePhotoButton, styles.takePhotoButtonDisabled]}
           disabled={true}
-        ></TouchableOpacity>
+        ><AntDesign name="scan1" size={40} color="hsl(0, 0%, 40%)" /></TouchableOpacity>
       )}
     </>
   );
@@ -342,17 +361,27 @@ export default function CropRectangle({ isCameraReady, takePicture }) {
 const styles = StyleSheet.create({
   box: {
     position: "absolute",
-    backgroundColor: "yellow",
-    borderWidth: 0,
-    borderColor: "red",
-    opacity: 0.4,
+    backgroundColor: 'rgba(255, 240, 0, .2)',
+    borderWidth: BORDER_RADIUS,
+    borderColor: 'rgba(255, 240, 0, 1)',
+    //opacity: 0.4,
   },
-  cornerBox: {
+  cornerHitBox: {
     position: "absolute",
-    width: CORNER_LEN,
-    height: CORNER_LEN,
-    backgroundColor: "yellow",
+    width: CORNER_HITBOX,
+    height: CORNER_HITBOX,
+    //backgroundColor: "yellow",
+    //opacity: 0.2,
+    //borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  cornerBox: { 
+    width: 15, 
+    height: 15, 
+    backgroundColor: 'rgba(255, 240, 0, 1)', 
     borderRadius: 100,
+    //opacity: 1,
   },
   takePhotoButton: {
     width: 80,
@@ -361,6 +390,8 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     position: "absolute",
     bottom: "10%",
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   takePhotoButtonDisabled: {
     backgroundColor: "grey",

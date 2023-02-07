@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, SafeAreaView, TextInput } from "react-native";
-import { Themes } from "../Themes";
+import { Themes } from "../../Themes";
 import { useState, useEffect } from "react";
 import InsetShadow from "react-native-inset-shadow";
 import AsyncStorage from '@react-native-async-storage/async-storage';

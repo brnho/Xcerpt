@@ -5,6 +5,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import InsetShadow from "react-native-inset-shadow";
 import { supabase } from "../supabase";
 import UserContext from '../UserContext';
+import storage from "../storage";
+import uuid from 'react-native-uuid';
+import * as FileSystem from 'expo-file-system';
+import * as SQLite from 'expo-sqlite';
+
+const db = SQLite.openDatabase("db.db");
 
 const GOOGLE_API = 'https://www.googleapis.com/books/v1/volumes?';
 const API_KEY = 'AIzaSyADRN5e9ZW61-sHZm0f-XKkQluTI4kvOI8';
@@ -15,18 +21,58 @@ const GREY1 = "hsl(0, 0%, 60%)";
 
 const Book = ({ item, setModalVisible, modalVisible, getBooks }) => {
     const { email } = useContext(UserContext);
+
     const addBook = async () => {
+        const localId = uuid.v4();
+        const bookObj = {
+            uuid: localId,
+            title: item.volumeInfo?.title,
+            author: item.volumeInfo?.authors?.join(','),
+            imageLocal: FileSystem.documentDirectory + localId,
+            imageWeb: item.volumeInfo?.imageLinks?.smallThumbnail,
+            email: email,
+            timestamp: new Date().getTime()
+        };
         try {
-            await supabase.from("books").insert({
-                title: item.volumeInfo?.title,
-                author: item.volumeInfo?.authors?.join(','),
-                image: item.volumeInfo?.imageLinks?.smallThumbnail,
-                email: email,
-            });
-            getBooks();
-            setModalVisible(!modalVisible);
+            // download image to local file system
+            await FileSystem.downloadAsync(bookObj.imageWeb, bookObj.imageLocal);
+            // add book to sqlite
+            db.transaction((tx) => {
+                tx.executeSql(
+                    "insert into books (uuid, title, author, image, timestamp) values(?, ?, ?, ?, ?)",
+                    [bookObj.uuid, bookObj.title, bookObj.author, bookObj.imageLocal, bookObj.timestamp],
+                    (_, result) => {
+                        getBooks();
+                        setModalVisible(!modalVisible);
+                        addBookSupabase(bookObj);
+                    }
+                );
+            }, (error) => console.error(error));
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    const addBookSupabase = async (bookObj) => {
+        const supabaseBook = {
+            uuid: bookObj.uuid,
+            title: bookObj.title,
+            author: bookObj.author,
+            image: bookObj.imageWeb,
+            timestamp: bookObj.timestamp,
+            email: email,
+        }
+        try {
+            const { _, error } = await supabase.from("books").insert(supabaseBook);
+            if (error !== null) {
+                throw error;
+            }
         } catch (err) {
             console.error(err);
+            // add book to local storage
+            const books = JSON.parse(storage.getString('addBooks'));
+            books.push(supabaseBook);
+            storage.set('addBooks', JSON.stringify(books));
         }
     }
 

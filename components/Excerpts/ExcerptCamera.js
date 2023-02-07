@@ -1,74 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
-  ImageBackground,
   ActivityIndicator,
-  SafeAreaView,
+  Animated,
 } from "react-native";
 import { Camera, CameraType } from "expo-camera";
 import CropRectangle from "./CropRectangle.js";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
-import Themes from "../Themes/Themes.js";
-import MlkitOcr from 'react-native-mlkit-ocr';
+import CameraPreview from "./CameraPreview.js";
+import { AntDesign } from '@expo/vector-icons';
 
-const CameraPreview = ({ photo, resetCamera, widthScale, heightScale }) => {
-  const getText = async () => {
-    try {
-      //const result = await TextRecognition.recognize();
-      //const result = await TesseractOcr.recognize(photo.uri, LANG_ENGLISH); 
-      //const result = await Tesseract.recognize(photo.uri, LANG_ENGLISH);
-      //const OCR = NativeModules.OCR;
-      //const result = await OCR.scanForText(photo.uri);
-      //console.log(result);
-
-      const resultFromUri = await MlkitOcr.detectFromUri(photo.uri);
-      resultFromUri.map((block) => {
-        block.lines.map((line) => {
-          console.log(line.text);
-        })
-      })
-      /*
-      const tessOptions = {};
-      const text = await TesseractOcr.recognize(photo.uri, LANG_ENGLISH, tessOptions);
-      console.log(text);
-      */
-      /*
-       const result = await TextRecognition.recognize(photo.uri);
-       console.log(result);
-             */
-    } catch (err) {
-      console.log('Error:', err);
-    }
-  }
-  useEffect(() => {
-    getText();
-  }, []);
-  return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={{ uri: photo.uri }}
-        style={{
-          width: photo.width / widthScale,
-          height: photo.height / heightScale,
-        }}
-      />
-      <TouchableOpacity
-        style={styles.takePhotoButton}
-        onPress={resetCamera}
-      ></TouchableOpacity>
-    </SafeAreaView>
-  );
-};
-
-export default function ExcerptCamera() {
+export default function ExcerptCamera({ book_uuid, setModalVisible, loadExcerpts }) {
   const [permission, setPermission] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [hasTakenPicture, setHasTakenPicture] = useState(false);
+  const [showInfoBox, setShowInfoBox] = useState(true);
 
   // necessary to use state for getting view dimensions
   const [viewWidth, setViewWidth] = useState(null);
@@ -76,6 +26,8 @@ export default function ExcerptCamera() {
   const [widthScale, setWidthScale] = useState(null);
   const [heightScale, setHeightScale] = useState(null);
   let camera;
+
+  const opacityAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // check current permission status
@@ -85,6 +37,16 @@ export default function ExcerptCamera() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!showInfoBox) {
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start()
+    } 
+  }, [showInfoBox]);
+
   const takePicture = async (bottom, left, height, width) => {
     if (!camera) return;
     setHasTakenPicture(true); // display loading wheel while camera takes picture
@@ -92,7 +54,7 @@ export default function ExcerptCamera() {
     // get scaling ratio because photo dimension units are different from view dimension units
     const wScale = photo.width / viewWidth;
     const hScale = photo.height / viewHeight;
-    const manipResult = await manipulateAsync(
+    const cropPhoto = await manipulateAsync(
       photo.uri,
       [
         {
@@ -106,9 +68,14 @@ export default function ExcerptCamera() {
       ],
       { compress: 1, format: SaveFormat.PNG }
     );
+    const origPhoto = await manipulateAsync(
+      photo.uri,
+      [],
+      { compress: 1, format: SaveFormat.PNG }
+    )
     setWidthScale(wScale);
     setHeightScale(hScale);
-    setCapturedImage(manipResult);
+    setCapturedImage({ cropPhoto, origPhoto });
     setHasTakenPicture(false);
   };
 
@@ -144,7 +111,7 @@ export default function ExcerptCamera() {
 
   if (!capturedImage) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View
           style={styles.innerContainer}
           onLayout={(event) => {
@@ -162,12 +129,19 @@ export default function ExcerptCamera() {
           >
             {hasTakenPicture ? <ActivityIndicator size="large" /> : null}
           </Camera>
+
+          <Animated.View style={[styles.boxInfo, { opacity: opacityAnim }]}>
+            <Text style={styles.boxInfoText}>Drag or resize the highlighter box to cover the text you wish to capture, then tap
+              the <AntDesign name="scan1" size={15} color="white" /> button</Text>
+          </Animated.View>
+
           <CropRectangle
             isCameraReady={isCameraReady}
             takePicture={takePicture}
+            setShowInfoBox={setShowInfoBox}
           />
         </View>
-      </SafeAreaView>
+      </View>
     );
   } else {
     return (
@@ -176,6 +150,9 @@ export default function ExcerptCamera() {
         resetCamera={resetCamera}
         widthScale={widthScale}
         heightScale={heightScale}
+        book_uuid={book_uuid}
+        loadExcerpts={loadExcerpts}
+        setModalVisible={setModalVisible}
       />
     );
   }
@@ -184,7 +161,6 @@ export default function ExcerptCamera() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Themes.dark.bg,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -200,15 +176,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  takePhotoButton: {
-    width: 80,
-    height: 80,
-    backgroundColor: "white",
-    borderRadius: 9999,
-    position: "absolute",
-    bottom: "10%",
+  boxInfo: {
+    position: 'absolute',
+    top: 75,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: '80%',
+    padding: 10,
+    borderRadius: 10
   },
-  takePhotoButtonDisabled: {
-    backgroundColor: "grey",
-  },
+  boxInfoText: {
+    textAlign: 'center',
+    color: 'white'
+  }
 });

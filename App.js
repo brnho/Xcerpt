@@ -5,8 +5,6 @@ import AppStack from "./AppStack.js";
 import Login from "./components/Login.js";
 import { supabase } from "./supabase.js";
 import UserContext from "./UserContext.js";
-import { HoldMenuProvider } from "react-native-hold-menu";
-
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -48,7 +46,7 @@ export default function App() {
   
   return (
     <UserContext.Provider value={{ setLoggedIn, email }}>
-      {loggedIn ? <HoldMenuProvider theme="light"><AppStack /></HoldMenuProvider>: <Login />}
+      {loggedIn ? <AppStack /> : <Login />}
     </UserContext.Provider>
   );
 }

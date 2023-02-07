@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Themes } from "../Themes";
 import BookData from "../utils/BookData";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import * as FileSystem from 'expo-file-system';
 
 const GREY1 = "hsl(0, 0%, 60%)";
 
@@ -31,13 +32,18 @@ const Book = ({ item, navigation }) => {
                 </View>
                 <TouchableOpacity
                     onPress={() => {
-                        navigation.navigate("Excerpts2", {
-                            key: BookData[0].key,
+                        navigation.navigate("Excerpts", {
+                            /*key: BookData[0].key,
                             title: BookData[0].title,
                             author: BookData[0].author,
-                            excerpts: BookData[0].excerpts,
+                            excerpts: BookData[0].excerpts,*/
+                            title: item.title,
+                            author: item.author,
+                            image: item.image,
+                            book_uuid:  item.uuid,
                         });
                     }}
+                    hitSlop={20}
                 >
                     <MaterialIcons name="arrow-forward-ios" size={18} color={GREY1} />
                 </TouchableOpacity>
