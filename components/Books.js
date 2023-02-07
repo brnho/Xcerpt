@@ -198,10 +198,10 @@ const Books = ({ navigation }) => {
 
     // create new tables if they don't exist
     useEffect(() => {
-        db.transaction((tx) => {
+        /*db.transaction((tx) => {
             tx.executeSql('drop table books');
             tx.executeSql('drop table excerpts');
-        });
+        });*/
         db.transaction((tx) => {
             tx.executeSql(
                 `create table if not exists books (id integer primary key not null, 
