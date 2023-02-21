@@ -13,8 +13,6 @@ const BLUE2 = "hsl(180, 61%, 85%)";
 export default BooksHeader2 = () => {
     return (
         <>
-   
-
             <View style={styles.searchBarContainer}>
                 <InsetShadow
                     shadowColor="black"
@@ -40,9 +38,6 @@ export default BooksHeader2 = () => {
                     <FontAwesome5 name="sort" size={18} color={GREY2} />
                 </View>
             </View>
-
-
-   
         </>
     );
 };

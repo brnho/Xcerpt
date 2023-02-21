@@ -70,7 +70,6 @@ const Books = ({ navigation }) => {
     const [deleteBook_uuid, setDeleteBook_uuid] = useState(null);
 
     const getBooks = async () => {
-        console.log('getting books');
         db.transaction((tx) => {
             tx.executeSql(
                 `select * from books`,
@@ -183,6 +182,23 @@ const Books = ({ navigation }) => {
         storage.set('deleteBooks', JSON.stringify(failedBooks));
     }
 
+    // add any excerpts in local storage addExcerpts to supabase
+    const syncInsertExcerptsSupabase = async () => {
+        const excerpts = JSON.parse(storage.getString('addExcerpts'));
+        const failedExcerpts = [];
+        for (const excerpt of excerpts) {
+            try {
+                const {data, error} = await supabase.from("excerpts").insert(excerpt);
+                if (error) {
+                    throw error;
+                }
+            } catch (err) {
+                failedExcerpts.push(excerpt);
+            }
+        }
+        storage.set('addExcerpts', JSON.stringify(failedExcerpts));
+    }
+
     // sync local database with supabase
     useEffect(() => {
         // first time opening app, fields not set yet
@@ -194,6 +210,7 @@ const Books = ({ navigation }) => {
         }
         syncInsertSupabase();
         syncDeleteSupabase();
+        syncInsertExcerptsSupabase(); 
     }, [])
 
     // create new tables if they don't exist
@@ -209,7 +226,8 @@ const Books = ({ navigation }) => {
             );
             tx.executeSql(
                 `create table if not exists excerpts (id integer primary key not null, book_uuid text,
-                      text text, page integer, chapter integer, timestamp integer, foreign key(book_uuid) references books(uuid));`
+                      text text, page integer, chapter integer, timestamp integer, 
+                      starred integer, foreign key(book_uuid) references books(uuid));`
             );
         }, (error) => console.log('error', error));
 

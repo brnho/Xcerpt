@@ -5,7 +5,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from "expo-linear-gradient";
 import qs from 'qs';
 import UserContext from '../UserContext';
-
 const RETURN_URI = 'exp+finalproject2://expo-development-client/?url=http%3A%2F%2F10.0.0.16%3A8081';
 
 const BLUE3 = "hsl(180, 61%, 87%)";

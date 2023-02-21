@@ -5,6 +5,7 @@ import AppStack from "./AppStack.js";
 import Login from "./components/Login.js";
 import { supabase } from "./supabase.js";
 import UserContext from "./UserContext.js";
+import storage from "./storage.js";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -23,7 +24,8 @@ export default function App() {
       const { data } = await supabase.auth.getSession();
       if (data.session !== null) {
         setLoggedIn(true);
-        setEmail(data.session.user.email)
+        storage.set('user', data.session.user.email);
+        setEmail(data.session.user.email);
       } else {
         setLoggedIn(false);
       }

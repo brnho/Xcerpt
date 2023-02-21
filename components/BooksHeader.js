@@ -15,7 +15,7 @@ export default BooksHeader = ({ getBooks }) => {
     return (
         <>
             <View style={styles.header}>
-            <Entypo name="plus" size={32} color={GREY1} style={{opacity: 0}} />
+                <Entypo name="plus" size={32} color={GREY1} style={{ opacity: 0 }} />
                 <Text style={styles.headerText}>Books</Text>
                 <TouchableOpacity itSlop={30} onPress={() => { setModalVisible(!modalVisible) }}>
                     <Entypo name="plus" size={32} color={GREY1} />

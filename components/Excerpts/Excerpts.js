@@ -20,6 +20,9 @@ import FilterSortMenu from "./FilterSortMenu";
 import storage from "../../storage";
 import * as SQLite from 'expo-sqlite';
 import * as FilterSortQueries from './FilterSortQueries';
+import EditExcerptForm from "./EditExcerptForm";
+import { ContextMenuProvider } from "@brnho/react-native-context-menu";
+import DeleteConfirm from "./DeleteConfirm";
 
 const db = SQLite.openDatabase("db.db");
 
@@ -54,10 +57,15 @@ export default function Excerpts({ route, navigation }) {
     //const { key, title, author, excerpts, bookId } = route.params;
     const [modalVisible, setModalVisible] = useState(false);
     const [menuModalVisible, setMenuModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [deleteExcerptId, setDeleteExcerptId] = useState(null);
+    const [editExcerpt, setEditExcerpt] = useState({});
     const [excerptData, setExcerptData] = useState(null);
     //const [filteredExcerptData, setFilteredExcerptData] = useState(null);
     const [chapters, setChapters] = useState([]);
     const [chapter, setChapter] = useState(null);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
 
     const [filterOption, setFilterOption] = useState(null);
     const [sortOption, setSortOption] = useState(null);
@@ -75,7 +83,7 @@ export default function Excerpts({ route, navigation }) {
             tx.executeSql(
                 `select distinct chapter from excerpts where book_uuid = ?`,
                 [book_uuid],
-                (_, { rows: { _array } }) => {     
+                (_, { rows: { _array } }) => {
                     setChapters(_array.map((value) => value.chapter));
                 }
             )
@@ -97,6 +105,34 @@ export default function Excerpts({ route, navigation }) {
         }
         */
     }
+
+    const deleteExcerpt = async (excerptId) => {
+        db.transaction((tx) => {
+            tx.executeSql('delete from excerpts where book_uuid = ? and id = ?;', [book_uuid, excerptId]);
+        }, null, () => {
+            loadFilteredExcerpts();
+            deleteExcerptSupabase(excerptId);
+        });
+    }
+ 
+    const deleteExcerptSupabase = async (excerptId) => {
+        try { 
+            const { error } = await supabase.from('excerpts').delete().eq('book_uuid', book_uuid)
+                .eq('local_id', excerptId);
+            if (error !== null) {
+                throw error;
+            }
+        } catch (e) {
+            console.error(e);
+            // todo: add excerpt uuid to local storage
+            /*
+            const excerpts = JSON.parse(storage.getString('deleteExcerpts'));
+            excerpts.push(book_uuid);
+            storage.set('deleteBooks', JSON.stringify(books));
+            */
+        }
+    }
+
 
     /*
     const getDistinctChapters = async () => {
@@ -193,22 +229,16 @@ export default function Excerpts({ route, navigation }) {
                 }
             );
             tx.executeSql(
-                `select distinct chapter from excerpts where book_uuid = ? and chapter is not null`,
+                `select distinct chapter from excerpts where book_uuid = ? and chapter is not null order by chapter asc`,
                 [book_uuid],
-                (_, { rows: { _array } }) => {  
+                (_, { rows: { _array } }) => {
                     setChapters(_array.map((value) => value.chapter));
                 }
             );
         }, (err) => console.log('error', err));
     }
 
-
-
-    useEffect(() => {
-        if (menuModalVisible || modalVisible) {
-            return;
-        }
-        console.log('loading excerpts');
+    const loadFilteredExcerpts = () => {
         if (filterOption === null) {
             switch (sortOption) {
                 case null:
@@ -264,50 +294,84 @@ export default function Excerpts({ route, navigation }) {
                     break;
             }
         }
-    }, [menuModalVisible, modalVisible])
+    }
+
+    useEffect(() => {
+        if (!menuModalVisible) {
+            loadFilteredExcerpts();
+        }
+    }, [menuModalVisible])
 
     return (
-        <View style={{ flex: 1, backgroundColor: BLUE3 }}>
-            <LinearGradient
-                colors={["hsl(180, 61%, 97%)", "hsl(180, 61%, 97%)"]}
-                style={styles.background}
-            />
-            <ExcerptTopHeader navigation={navigation} setModalVisible={setModalVisible} />
-            <FlatList
-                showsVerticalScrollIndicator={false}
-                style={{ overflow: 'hidden', marginBottom: 25 }}
-                ListHeaderComponent={() => (
-                    <ExcerptHeader
-                        title={title}
-                        author={author}
-                        image={image}
-                        setMenuModalVisible={setMenuModalVisible}
-                    />
-                )}
-                data={excerptData}
-                renderItem={({ item }) => (
-                    <Excerpt item={item} navigation={navigation} />
-                )}
-                keyExtractor={(_, index) => index}
-            />
-            <ExcerptForm
-                modalVisible={modalVisible}
-                setModalVisible={setModalVisible}
-                book_uuid={book_uuid}
-                loadExcerpts={loadExcerpts}
-            />
-            <FilterSortMenu 
-                chapters={chapters} 
-                menuModalVisible={menuModalVisible} 
-                setMenuModalVisible={setMenuModalVisible}
-                filterOption={filterOption}
-                sortOption={sortOption}
-                setFilterOption={setFilterOption}
-                setSortOption={setSortOption}
-                chapter={chapter}
-                setChapter={setChapter}
-            />
-        </View>
+        <ContextMenuProvider
+            setScrollEnabled={setScrollEnabled}
+            EXPAND_FACTOR={0.97}
+            SCREEN_SHRINK_FACTOR={0.95}
+            MENU_MARGIN={10}
+        >
+
+            <View style={{ flex: 1, backgroundColor: BLUE3 }}>
+                <LinearGradient
+                    colors={["hsl(180, 61%, 97%)", "hsl(180, 61%, 97%)"]}
+                    style={styles.background}
+                />
+                <ExcerptTopHeader navigation={navigation} setModalVisible={setModalVisible} />
+                <FlatList
+                    showsVerticalScrollIndicator={false}
+                    style={{ overflow: 'hidden', marginBottom: 25 }}
+                    scrollEnabled={scrollEnabled}
+                    ListHeaderComponent={() => (
+                        <ExcerptHeader
+                            title={title}
+                            author={author}
+                            image={image}
+                            setMenuModalVisible={setMenuModalVisible}
+                        />
+                    )}
+                    data={excerptData}
+                    renderItem={({ item }) => (
+                        <Excerpt
+                            item={item}
+                            navigation={navigation}
+                            setEditExcerpt={setEditExcerpt}
+                            setEditModalVisible={setEditModalVisible}
+                            setDeleteModalVisible={setDeleteModalVisible}
+                            setDeleteExcerptId={setDeleteExcerptId}
+                        />
+                    )}
+                    keyExtractor={(_, index) => index}
+                />
+                <ExcerptForm
+                    modalVisible={modalVisible}
+                    setModalVisible={setModalVisible}
+                    book_uuid={book_uuid}
+                    loadExcerpts={loadExcerpts}
+                />
+                <FilterSortMenu
+                    chapters={chapters}
+                    menuModalVisible={menuModalVisible}
+                    setMenuModalVisible={setMenuModalVisible}
+                    filterOption={filterOption}
+                    sortOption={sortOption}
+                    setFilterOption={setFilterOption}
+                    setSortOption={setSortOption}
+                    chapter={chapter}
+                    setChapter={setChapter}
+                />
+                <EditExcerptForm
+                    editModalVisible={editModalVisible}
+                    setEditModalVisible={setEditModalVisible}
+                    editExcerpt={editExcerpt}
+                    loadFilteredExcerpts={loadFilteredExcerpts}
+                    book_uuid={book_uuid}
+                />
+                <DeleteConfirm
+                    deleteModalVisible={deleteModalVisible}
+                    setDeleteModalVisible={setDeleteModalVisible}
+                    deleteExcerpt={() => deleteExcerpt(deleteExcerptId)}
+                />
+            </View>
+        </ContextMenuProvider>
     );
 }
 
